@@ -42,7 +42,7 @@ const commands = [
 
         // is this a youtube link?
         if (!url.includes("youtube.com") && !url.includes("youtu.be")) {
-          return interaction.followUp({
+          return interaction.editReply({
             content: "Please provide a valid YouTube URL.",
           });
         }
@@ -51,7 +51,7 @@ const commands = [
         const videoId = url.split("v=")[1]?.split("&")[0];
 
         if (!videoId) {
-          return interaction.followUp({
+          return interaction.editReply({
             content: "Please provide a valid YouTube URL.",
           });
         }
@@ -63,7 +63,7 @@ const commands = [
           (error) => {
             if (error) {
               console.error("Error getting video ID:", error);
-              return interaction.followUp({
+              return interaction.editReply({
                 content: "Error getting video ID.",
               });
             }
@@ -71,7 +71,7 @@ const commands = [
         );
 
         if (!videoInfo) {
-          return interaction.followUp({
+          return interaction.editReply({
             content: "Please provide a valid YouTube URL.",
           });
         }
@@ -79,14 +79,14 @@ const commands = [
         let song = `./tmp/${videoId}.opus`;
         // does song exist already?
         if (fs.existsSync(song)) {
-          interaction.followUp({
+          interaction.editReply({
             content: "Song already exists in cache, playing it.",
           });
         }
         // if not, download it
         else {
           try {
-            interaction.followUp({
+            interaction.editReply({
               content: "Downloading song...",
             });
 
@@ -94,12 +94,12 @@ const commands = [
               `yt-dlp -x --audio-format opus --audio-quality 64k -o "./tmp/%(id)s.opus" ${url}`
             );
 
-            interaction.followUp({
+            interaction.editReply({
               content: "Song downloaded and cached.",
             });
           } catch (error) {
             console.error("Error downloading song:", error);
-            return interaction.followUp({
+            return interaction.editReply({
               content: "Error downloading song.",
             });
           }
@@ -107,7 +107,7 @@ const commands = [
 
         // does song exist now?
         if (!fs.existsSync(song)) {
-          return interaction.followUp({
+          return interaction.editReply({
             content: "Song not found.",
           });
         }
@@ -115,7 +115,7 @@ const commands = [
         const channel = interaction.member.voice.channel;
 
         if (!channel) {
-          return interaction.followUp({
+          return interaction.editReply({
             content: "You need to be in a voice channel to play a song.",
           });
         }
@@ -150,7 +150,7 @@ const commands = [
       const channel = interaction.member.voice.channel;
 
       if (!channel) {
-        return interaction.followUp({
+        return interaction.editReply({
           content: "You need to be in a voice channel to stop the song.",
         });
       }
@@ -163,7 +163,7 @@ const commands = [
 
       connection.destroy();
 
-      interaction.followUp({
+      interaction.editReply({
         content: "Stopped the song and left the voice channel.",
       });
     },
@@ -186,7 +186,7 @@ client.on(Events.InteractionCreate, async (interaction) => {
   await interaction.deferReply();
 
   if (!process.env.DISCORD_ID_WHITELIST.includes(interaction.guild.id))
-    return interaction.followUp({
+    return interaction.editReply({
       content:
         "This guild isn't whitelisted to use this bot. Contact <@723361818940276736> to purchase your own instance, or [build me from source](<https://github.com/zuedev/DiscordJockey>).",
     });
@@ -200,14 +200,14 @@ client.on(Events.InteractionCreate, async (interaction) => {
       );
       await command[1](interaction);
     } else {
-      await interaction.followUp({
+      await interaction.editReply({
         content: "Command not found.",
       });
     }
   } catch (error) {
     console.error("Error executing command:", error);
 
-    await interaction.followUp({
+    await interaction.editReply({
       content: "Error executing command. I've notified my developer.",
     });
   }
