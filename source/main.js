@@ -23,114 +23,123 @@ const commands = [
     new SlashCommandBuilder()
       .setName("play")
       .setDescription("Plays a song in the voice channel you are in.")
-      .addStringOption((option) =>
-        option
-          .setName("url")
-          .setDescription("The URL of the song to play.")
-          .setRequired(true)
+      .addSubcommand((subcommand) =>
+        subcommand
+          .setName("youtube")
+          .setDescription("Plays a song from YouTube.")
+          .addStringOption((option) =>
+            option
+              .setName("url")
+              .setDescription("The URL of the YouTube video.")
+              .setRequired(true)
+          )
       ),
     async (interaction) => {
-      const url = interaction.options.getString("url");
+      const subcommand = interaction.options.getSubcommand();
 
-      // is this a youtube link?
-      if (!url.includes("youtube.com") && !url.includes("youtu.be")) {
-        return interaction.followUp({
-          content: "Please provide a valid YouTube URL.",
-        });
-      }
+      if (subcommand === "youtube") {
+        const url = interaction.options.getString("url");
 
-      // extract video ID from URL
-      const videoId = url.split("v=")[1]?.split("&")[0];
+        // is this a youtube link?
+        if (!url.includes("youtube.com") && !url.includes("youtu.be")) {
+          return interaction.followUp({
+            content: "Please provide a valid YouTube URL.",
+          });
+        }
 
-      if (!videoId) {
-        return interaction.followUp({
-          content: "Please provide a valid YouTube URL.",
-        });
-      }
+        // extract video ID from URL
+        const videoId = url.split("v=")[1]?.split("&")[0];
 
-      // check if video ID is valid
-      const videoInfo = await execSync(
-        `yt-dlp --get-id ${url}`,
-        { encoding: "utf-8" },
-        (error) => {
-          if (error) {
-            console.error("Error getting video ID:", error);
+        if (!videoId) {
+          return interaction.followUp({
+            content: "Please provide a valid YouTube URL.",
+          });
+        }
+
+        // check if video ID is valid
+        const videoInfo = await execSync(
+          `yt-dlp --get-id ${url}`,
+          { encoding: "utf-8" },
+          (error) => {
+            if (error) {
+              console.error("Error getting video ID:", error);
+              return interaction.followUp({
+                content: "Error getting video ID.",
+              });
+            }
+          }
+        );
+
+        if (!videoInfo) {
+          return interaction.followUp({
+            content: "Please provide a valid YouTube URL.",
+          });
+        }
+
+        let song = `./tmp/${videoId}.opus`;
+        // does song exist already?
+        if (fs.existsSync(song)) {
+          interaction.followUp({
+            content: "Song already exists in cache, playing it.",
+          });
+        }
+        // if not, download it
+        else {
+          try {
+            interaction.followUp({
+              content: "Downloading song...",
+            });
+
+            await execSync(
+              `yt-dlp -x --audio-format opus --audio-quality 64k -o "./tmp/%(id)s.opus" ${url}`
+            );
+
+            interaction.followUp({
+              content: "Song downloaded and cached.",
+            });
+          } catch (error) {
+            console.error("Error downloading song:", error);
             return interaction.followUp({
-              content: "Error getting video ID.",
+              content: "Error downloading song.",
             });
           }
         }
-      );
 
-      if (!videoInfo) {
-        return interaction.followUp({
-          content: "Please provide a valid YouTube URL.",
-        });
-      }
-
-      let song = `./tmp/${videoId}.opus`;
-      // does song exist already?
-      if (fs.existsSync(song)) {
-        interaction.followUp({
-          content: "Song already exists in cache, playing it.",
-        });
-      }
-      // if not, download it
-      else {
-        try {
-          interaction.followUp({
-            content: "Downloading song...",
-          });
-
-          await execSync(
-            `yt-dlp -x --audio-format opus --audio-quality 64k -o "./tmp/%(id)s.opus" ${url}`
-          );
-
-          interaction.followUp({
-            content: "Song downloaded and cached.",
-          });
-        } catch (error) {
-          console.error("Error downloading song:", error);
+        // does song exist now?
+        if (!fs.existsSync(song)) {
           return interaction.followUp({
-            content: "Error downloading song.",
+            content: "Song not found.",
           });
         }
-      }
 
-      // does song exist now?
-      if (!fs.existsSync(song)) {
-        return interaction.followUp({
-          content: "Song not found.",
+        const channel = interaction.member.voice.channel;
+
+        if (!channel) {
+          return interaction.followUp({
+            content: "You need to be in a voice channel to play a song.",
+          });
+        }
+
+        const connection = joinVoiceChannel({
+          channelId: channel.id,
+          guildId: interaction.guild.id,
+          adapterCreator: interaction.guild.voiceAdapterCreator,
         });
-      }
 
-      const channel = interaction.member.voice.channel;
-
-      if (!channel) {
-        return interaction.followUp({
-          content: "You need to be in a voice channel to play a song.",
+        const player = createAudioPlayer({
+          behaviors: {
+            noSubscriber: AudioPlayerStatus.Idle,
+          },
         });
+
+        const resource = createAudioResource(song, {
+          inlineVolume: true,
+        });
+
+        connection.subscribe(player);
+
+        player.play(resource);
       }
-
-      const connection = joinVoiceChannel({
-        channelId: channel.id,
-        guildId: interaction.guild.id,
-        adapterCreator: interaction.guild.voiceAdapterCreator,
-      });
-
-      const player = createAudioPlayer({
-        behaviors: {
-          noSubscriber: AudioPlayerStatus.Idle,
-        },
-      });
-
-      const resource = createAudioResource(song, {
-        inlineVolume: true,
-      });
-
-      connection.subscribe(player);
-
-      player.play(resource);
     },
   ],
 ];
