@@ -35,6 +35,14 @@ const commands = [
           )
       ),
     async (interaction) => {
+      if (!process.env.DISCORD_ID_WHITELIST.includes(interaction.guild.id))
+        return interaction.followUp({
+          content:
+            "This guild isn't whitelisted to use this bot." +
+            +"\n" +
+            "Use the `/purchase` command to get your own instance of the bot!",
+        });
+
       const subcommand = interaction.options.getSubcommand();
 
       if (subcommand === "youtube") {
@@ -147,6 +155,14 @@ const commands = [
       .setName("stop")
       .setDescription("Stops the song and leaves the voice channel."),
     async (interaction) => {
+      if (!process.env.DISCORD_ID_WHITELIST.includes(interaction.guild.id))
+        return interaction.followUp({
+          content:
+            "This guild isn't whitelisted to use this bot." +
+            +"\n" +
+            "Use the `/purchase` command to get your own instance of the bot!",
+        });
+
       const channel = interaction.member.voice.channel;
 
       if (!channel) {
@@ -195,14 +211,6 @@ client.on(Events.InteractionCreate, async (interaction) => {
   if (!interaction.isChatInputCommand()) return;
 
   await interaction.deferReply();
-
-  if (!process.env.DISCORD_ID_WHITELIST.includes(interaction.guild.id))
-    return interaction.followUp({
-      content:
-        "This guild isn't whitelisted to use this bot." +
-        +"\n" +
-        "Use the `/purchase` command to get your own instance of the bot!",
-    });
 
   if (commands.some((command) => command[0].name === interaction.commandName)) {
     const command = commands.find(
