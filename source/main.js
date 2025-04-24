@@ -199,7 +199,7 @@ const commands = [
 
 client.on(Events.ClientReady, async (readyClient) => {
   console.log(
-    `Logged in as ${readyClient.user.tag}! Here's my invite link: https://discord.com/oauth2/authorize?client_id=${readyClient.user.id}&scope=bot%20applications.commands&permissions=8`
+    `Logged in as ${readyClient.user.tag}! Here's my invite link: https://discord.com/oauth2/authorize?client_id=${readyClient.user.id}&scope=bot%20applications.commands&permissions=3145728`
   );
 
   await register(readyClient, [
