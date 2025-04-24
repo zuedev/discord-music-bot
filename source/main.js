@@ -48,7 +48,8 @@ const commands = [
         }
 
         // extract video ID from URL
-        const videoId = url.split("v=")[1]?.split("&")[0];
+        const videoId =
+          url.split("v=")[1]?.split("&")[0] || url.split("/").pop();
 
         if (!videoId) {
           return interaction.editReply({
