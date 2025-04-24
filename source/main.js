@@ -77,7 +77,7 @@ const commands = [
           });
         }
 
-        let song = `./tmp/${videoId}.opus`;
+        let song = `./tmp/youtube/${videoId}.opus`;
         // does song exist already?
         if (fs.existsSync(song)) {
           interaction.editReply({
@@ -92,7 +92,7 @@ const commands = [
             });
 
             await execSync(
-              `yt-dlp -x --audio-format opus --audio-quality 0 -o "./tmp/%(id)s.opus" ${url}`
+              `yt-dlp -x --audio-format opus --audio-quality 0 -o "${song}" ${url}`
             );
 
             interaction.editReply({
