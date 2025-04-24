@@ -35,14 +35,6 @@ const commands = [
           )
       ),
     async (interaction) => {
-      if (!process.env.DISCORD_ID_WHITELIST.includes(interaction.guild.id))
-        return interaction.followUp({
-          content:
-            "This guild isn't whitelisted to use this bot." +
-            +"\n" +
-            "Use the `/purchase` command to get your own instance of the bot!",
-        });
-
       const subcommand = interaction.options.getSubcommand();
 
       if (subcommand === "youtube") {
@@ -155,14 +147,6 @@ const commands = [
       .setName("stop")
       .setDescription("Stops the song and leaves the voice channel."),
     async (interaction) => {
-      if (!process.env.DISCORD_ID_WHITELIST.includes(interaction.guild.id))
-        return interaction.followUp({
-          content:
-            "This guild isn't whitelisted to use this bot." +
-            +"\n" +
-            "Use the `/purchase` command to get your own instance of the bot!",
-        });
-
       const channel = interaction.member.voice.channel;
 
       if (!channel) {
@@ -184,17 +168,6 @@ const commands = [
       });
     },
   ],
-  [
-    new SlashCommandBuilder()
-      .setName("purchase")
-      .setDescription("Purchase your own instance of the bot."),
-    async (interaction) => {
-      interaction.followUp({
-        content:
-          "To purchase your own instance of the bot, please message `zuedev` on Discord.",
-      });
-    },
-  ],
 ];
 
 client.on(Events.ClientReady, async (readyClient) => {
@@ -211,6 +184,12 @@ client.on(Events.InteractionCreate, async (interaction) => {
   if (!interaction.isChatInputCommand()) return;
 
   await interaction.deferReply();
+
+  if (!process.env.DISCORD_ID_WHITELIST.includes(interaction.guild.id))
+    return interaction.followUp({
+      content:
+        "This guild isn't whitelisted to use this bot. Contact <@723361818940276736> to purchase your own instance, or [build me from source](<https://github.com/zuedev/DiscordJockey>).",
+    });
 
   try {
     if (
