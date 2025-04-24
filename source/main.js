@@ -1,0 +1,165 @@
+import {
+  Client,
+  Events,
+  GatewayIntentBits,
+  SlashCommandBuilder,
+} from "discord.js";
+import {
+  AudioPlayerStatus,
+  createAudioPlayer,
+  createAudioResource,
+  joinVoiceChannel,
+} from "@discordjs/voice";
+import { execSync } from "child_process";
+import fs from "fs";
+import register from "./register.js";
+
+const client = new Client({
+  intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildVoiceStates],
+});
+
+const commands = [
+  [
+    new SlashCommandBuilder()
+      .setName("play")
+      .setDescription("Plays a song in the voice channel you are in.")
+      .addStringOption((option) =>
+        option
+          .setName("url")
+          .setDescription("The URL of the song to play.")
+          .setRequired(true)
+      ),
+    async (interaction) => {
+      const url = interaction.options.getString("url");
+
+      // is this a youtube link?
+      if (!url.includes("youtube.com") && !url.includes("youtu.be")) {
+        return interaction.followUp({
+          content: "Please provide a valid YouTube URL.",
+        });
+      }
+
+      // extract video ID from URL
+      const videoId = url.split("v=")[1]?.split("&")[0];
+
+      if (!videoId) {
+        return interaction.followUp({
+          content: "Please provide a valid YouTube URL.",
+        });
+      }
+
+      // check if video ID is valid
+      const videoInfo = await execSync(
+        `yt-dlp --get-id ${url}`,
+        { encoding: "utf-8" },
+        (error) => {
+          if (error) {
+            console.error("Error getting video ID:", error);
+            return interaction.followUp({
+              content: "Error getting video ID.",
+            });
+          }
+        }
+      );
+
+      if (!videoInfo) {
+        return interaction.followUp({
+          content: "Please provide a valid YouTube URL.",
+        });
+      }
+
+      let song = `./tmp/${videoId}.opus`;
+      // does song exist already?
+      if (fs.existsSync(song)) {
+        interaction.followUp({
+          content: "Song already exists in cache, playing it.",
+        });
+      }
+      // if not, download it
+      else {
+        try {
+          interaction.followUp({
+            content: "Downloading song...",
+          });
+
+          await execSync(
+            `yt-dlp -x --audio-format opus --audio-quality 64k -o "./tmp/%(id)s.opus" ${url}`
+          );
+
+          interaction.followUp({
+            content: "Song downloaded and cached.",
+          });
+        } catch (error) {
+          console.error("Error downloading song:", error);
+          return interaction.followUp({
+            content: "Error downloading song.",
+          });
+        }
+      }
+
+      // does song exist now?
+      if (!fs.existsSync(song)) {
+        return interaction.followUp({
+          content: "Song not found.",
+        });
+      }
+
+      const channel = interaction.member.voice.channel;
+
+      if (!channel) {
+        return interaction.followUp({
+          content: "You need to be in a voice channel to play a song.",
+        });
+      }
+
+      const connection = joinVoiceChannel({
+        channelId: channel.id,
+        guildId: interaction.guild.id,
+        adapterCreator: interaction.guild.voiceAdapterCreator,
+      });
+
+      const player = createAudioPlayer({
+        behaviors: {
+          noSubscriber: AudioPlayerStatus.Idle,
+        },
+      });
+
+      const resource = createAudioResource(song, {
+        inlineVolume: true,
+      });
+
+      connection.subscribe(player);
+
+      player.play(resource);
+    },
+  ],
+];
+
+client.on(Events.ClientReady, async (readyClient) => {
+  console.log(
+    `Logged in as ${readyClient.user.tag}! Here's my invite link: https://discord.com/oauth2/authorize?client_id=${readyClient.user.id}&scope=bot%20applications.commands&permissions=8`
+  );
+
+  await register(readyClient, [
+    ...commands.map((command) => command[0].toJSON()),
+  ]);
+});
+
+client.on(Events.InteractionCreate, async (interaction) => {
+  if (!interaction.isChatInputCommand()) return;
+
+  await interaction.deferReply();
+
+  if (commands.some((command) => command[0].name === interaction.commandName)) {
+    const command = commands.find(
+      (command) => command[0].name === interaction.commandName
+    );
+    await command[1](interaction);
+  } else {
+    await interaction.followUp({
+      content: "Command not found.",
+    });
+  }
+});
+
+client.login(process.env.TOKEN);

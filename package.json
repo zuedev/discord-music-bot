@@ -1,0 +1,17 @@
+{
+  "type": "module",
+  "scripts": {
+    "start": "node source/main.js",
+    "dev": "node --env-file=.env source/main.js",
+    "dev:watch": "node --watch --env-file=.env source/main.js"
+  },
+  "dependencies": {
+    "@discordjs/opus": "^0.10.0",
+    "@discordjs/voice": "^0.18.0",
+    "bufferutil": "^4.0.9",
+    "discord.js": "^14.18.0",
+    "ffmpeg-static": "^5.2.0",
+    "libsodium-wrappers": "^0.7.15",
+    "zlib-sync": "^0.1.9"
+  }
+}
