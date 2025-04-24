@@ -212,14 +212,24 @@ client.on(Events.InteractionCreate, async (interaction) => {
 
   await interaction.deferReply();
 
-  if (commands.some((command) => command[0].name === interaction.commandName)) {
-    const command = commands.find(
-      (command) => command[0].name === interaction.commandName
-    );
-    await command[1](interaction);
-  } else {
+  try {
+    if (
+      commands.some((command) => command[0].name === interaction.commandName)
+    ) {
+      const command = commands.find(
+        (command) => command[0].name === interaction.commandName
+      );
+      await command[1](interaction);
+    } else {
+      await interaction.followUp({
+        content: "Command not found.",
+      });
+    }
+  } catch (error) {
+    console.error("Error executing command:", error);
+
     await interaction.followUp({
-      content: "Command not found.",
+      content: "Error executing command. I've notified my developer.",
     });
   }
 });
