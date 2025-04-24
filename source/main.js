@@ -92,7 +92,7 @@ const commands = [
             });
 
             await execSync(
-              `yt-dlp -x --audio-format opus --audio-quality 64k -o "./tmp/%(id)s.opus" ${url}`
+              `yt-dlp -x --audio-format opus --audio-quality 0 -o "./tmp/%(id)s.opus" ${url}`
             );
 
             interaction.editReply({
