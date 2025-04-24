@@ -1,10 +1,8 @@
-FROM node:22
+FROM node:22-alpine
 WORKDIR /app
 COPY package.json .
 COPY package-lock.json .
 RUN npm install
 COPY . .
-RUN add-apt-repository ppa:tomtomtom/yt-dlp && \
-    apt update && \
-    apt install yt-dlp -y
+RUN apk -U add yt-dlp
 CMD ["npm", "start"]
