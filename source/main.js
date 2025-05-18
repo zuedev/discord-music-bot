@@ -3,6 +3,7 @@ import {
   Events,
   GatewayIntentBits,
   SlashCommandBuilder,
+  MessageFlags,
 } from "discord.js";
 import {
   AudioPlayerStatus,
@@ -184,7 +185,7 @@ client.on(Events.ClientReady, async (readyClient) => {
 client.on(Events.InteractionCreate, async (interaction) => {
   if (!interaction.isChatInputCommand()) return;
 
-  await interaction.deferReply();
+  await interaction.deferReply({ flags: MessageFlags.Ephemeral });
 
   if (!process.env.DISCORD_ID_WHITELIST.includes(interaction.guild.id))
     return interaction.editReply({
