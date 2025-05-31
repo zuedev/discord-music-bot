@@ -1,8 +1,8 @@
 <img src="avatar.png" height="100px"/>
 
-# DiscordJockey
+# Discord Music Bot
 
-A Discord music bot that actually works.
+> A Discord music bot that actually works.
 
 ## Development
 
