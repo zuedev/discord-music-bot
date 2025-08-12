@@ -4,6 +4,8 @@ import {
   GatewayIntentBits,
   SlashCommandBuilder,
   MessageFlags,
+  REST,
+  Routes,
 } from "discord.js";
 import {
   AudioPlayerStatus,
@@ -13,7 +15,6 @@ import {
 } from "@discordjs/voice";
 import { execSync } from "child_process";
 import fs from "fs";
-import register from "./register.js";
 
 const client = new Client({
   intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildVoiceStates],
@@ -216,3 +217,17 @@ client.on(Events.InteractionCreate, async (interaction) => {
 });
 
 client.login(process.env.TOKEN);
+
+async function register(client, commands) {
+  const rest = new REST({ version: "10" }).setToken(process.env.TOKEN);
+
+  try {
+    await rest.put(Routes.applicationCommands(client.user.id), {
+      body: commands,
+    });
+
+    console.log("Slash commands registered.");
+  } catch (error) {
+    console.error(error);
+  }
+}
