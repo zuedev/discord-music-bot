@@ -188,12 +188,6 @@ client.on(Events.InteractionCreate, async (interaction) => {
 
   await interaction.deferReply({ flags: MessageFlags.Ephemeral });
 
-  if (!process.env.DISCORD_ID_WHITELIST.includes(interaction.guild.id))
-    return interaction.editReply({
-      content:
-        "This guild isn't whitelisted to use this bot. Contact <@723361818940276736> to purchase your own instance, or [build me from source](<https://github.com/zuedev/DiscordJockey>).",
-    });
-
   try {
     if (
       commands.some((command) => command[0].name === interaction.commandName)
@@ -216,10 +210,12 @@ client.on(Events.InteractionCreate, async (interaction) => {
   }
 });
 
-client.login(process.env.TOKEN);
+client.login(process.env.DISCORD_BOT_TOKEN);
 
 async function register(client, commands) {
-  const rest = new REST({ version: "10" }).setToken(process.env.TOKEN);
+  const rest = new REST({ version: "10" }).setToken(
+    process.env.DISCORD_BOT_TOKEN
+  );
 
   try {
     await rest.put(Routes.applicationCommands(client.user.id), {
